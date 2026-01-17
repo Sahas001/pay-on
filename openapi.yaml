@@ -1,0 +1,1371 @@
+openapi: 3.0.3
+info:
+  title: Pay-On API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8080
+paths:
+  /wallets:
+    post:
+      tags: [wallets]
+      summary: Create wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWalletRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+    get:
+      tags: [wallets]
+      summary: List wallets
+      responses:
+        "200":
+          description: OK
+  /wallets/active:
+    get:
+      tags: [wallets]
+      summary: List active wallets
+      responses:
+        "200":
+          description: OK
+  /wallets/count:
+    get:
+      tags: [wallets]
+      summary: Count wallets
+      responses:
+        "200":
+          description: OK
+  /wallets/needs-sync:
+    get:
+      tags: [wallets]
+      summary: Wallets needing sync
+      responses:
+        "200":
+          description: OK
+  /wallets/search/name:
+    get:
+      tags: [wallets]
+      summary: Search wallets by name
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /wallets/search/phone:
+    get:
+      tags: [wallets]
+      summary: Search wallets by phone number
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /wallets/phone/{phone}:
+    get:
+      tags: [wallets]
+      summary: Get wallet by phone number
+      parameters:
+        - in: path
+          name: phone
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /wallets/public/{public_key}:
+    get:
+      tags: [wallets]
+      summary: Get wallet by public key
+      parameters:
+        - in: path
+          name: public_key
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /wallets/device/{device_id}:
+    get:
+      tags: [wallets]
+      summary: Get wallet by device ID
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}:
+    get:
+      tags: [wallets]
+      summary: Get wallet by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+    patch:
+      tags: [wallets]
+      summary: Update wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [wallets]
+      summary: Soft delete wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: No Content
+  /wallets/{id}/summary:
+    get:
+      tags: [wallets]
+      summary: Get wallet with balance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/balance:
+    get:
+      tags: [wallets]
+      summary: Get wallet balance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+    patch:
+      tags: [wallets]
+      summary: Update wallet balance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/balance-history:
+    get:
+      tags: [wallets]
+      summary: Get wallet balance history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/dashboard:
+    get:
+      tags: [wallets]
+      summary: Get wallet dashboard
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/balance/increment:
+    post:
+      tags: [wallets]
+      summary: Increment wallet balance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/balance/decrement:
+    post:
+      tags: [wallets]
+      summary: Decrement wallet balance
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/pin:
+    patch:
+      tags: [wallets]
+      summary: Update wallet PIN
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/sync:
+    patch:
+      tags: [wallets]
+      summary: Update wallet last sync time
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/deactivate:
+    post:
+      tags: [wallets]
+      summary: Deactivate wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/activate:
+    post:
+      tags: [wallets]
+      summary: Activate wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/hard:
+    delete:
+      tags: [wallets]
+      summary: Hard delete wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: No Content
+
+  /transactions:
+    post:
+      tags: [transactions]
+      summary: Create transaction
+      responses:
+        "201":
+          description: Created
+    get:
+      tags: [transactions]
+      summary: Search transactions
+      responses:
+        "200":
+          description: OK
+  /transactions/search:
+    get:
+      tags: [transactions]
+      summary: Search transactions
+      responses:
+        "200":
+          description: OK
+  /transactions/recent:
+    get:
+      tags: [transactions]
+      summary: Recent transactions
+      responses:
+        "200":
+          description: OK
+  /transactions/status/{status}:
+    get:
+      tags: [transactions]
+      summary: List transactions by status
+      parameters:
+        - in: path
+          name: status
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /transactions/unsynced:
+    get:
+      tags: [transactions]
+      summary: List unsynced transactions
+      responses:
+        "200":
+          description: OK
+  /transactions/pending/count:
+    get:
+      tags: [transactions]
+      summary: Count pending transactions
+      responses:
+        "200":
+          description: OK
+  /transactions/connection/{type}:
+    get:
+      tags: [transactions]
+      summary: List transactions by connection type
+      parameters:
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /transactions/large:
+    get:
+      tags: [transactions]
+      summary: List large transactions
+      responses:
+        "200":
+          description: OK
+  /transactions/metadata:
+    get:
+      tags: [transactions]
+      summary: Transactions by metadata
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}:
+    get:
+      tags: [transactions]
+      summary: Get transaction by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/with-wallets:
+    get:
+      tags: [transactions]
+      summary: Get transaction with wallets
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/status:
+    patch:
+      tags: [transactions]
+      summary: Update transaction status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/confirm:
+    post:
+      tags: [transactions]
+      summary: Confirm transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/settling:
+    post:
+      tags: [transactions]
+      summary: Mark transaction settling
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/settled:
+    post:
+      tags: [transactions]
+      summary: Mark transaction settled
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/mark-settled:
+    post:
+      tags: [transactions]
+      summary: Mark transaction settled (alias)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /transactions/{id}/fail:
+    post:
+      tags: [transactions]
+      summary: Fail transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /wallets/{id}/transactions:
+    get:
+      tags: [wallet-transactions]
+      summary: List transactions for wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/sent:
+    get:
+      tags: [wallet-transactions]
+      summary: List sent transactions for wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/received:
+    get:
+      tags: [wallet-transactions]
+      summary: List received transactions for wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/pending:
+    get:
+      tags: [wallet-transactions]
+      summary: List pending transactions for wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/range:
+    get:
+      tags: [wallet-transactions]
+      summary: List transactions by date range
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/stats:
+    get:
+      tags: [wallet-transactions]
+      summary: Wallet transaction stats
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/daily-summary:
+    get:
+      tags: [wallet-transactions]
+      summary: Wallet daily transaction summary
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/count:
+    get:
+      tags: [wallet-transactions]
+      summary: Count wallet transactions
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/transactions/nonce/{nonce}:
+    get:
+      tags: [wallet-transactions]
+      summary: Check nonce exists
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: nonce
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /peers:
+    post:
+      tags: [peers]
+      summary: Create peer
+      responses:
+        "201":
+          description: Created
+  /peers/upsert:
+    post:
+      tags: [peers]
+      summary: Upsert peer
+      responses:
+        "200":
+          description: OK
+  /peers/auto-trust:
+    post:
+      tags: [peers]
+      summary: Auto trust frequent peers
+      responses:
+        "200":
+          description: OK
+  /peers/{id}:
+    get:
+      tags: [peers]
+      summary: Get peer by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [peers]
+      summary: Soft delete peer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: No Content
+  /peers/{id}/hard:
+    delete:
+      tags: [peers]
+      summary: Hard delete peer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: No Content
+  /peers/{id}/last-seen:
+    patch:
+      tags: [peers]
+      summary: Update peer last seen
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /peers/{id}/trusted:
+    patch:
+      tags: [peers]
+      summary: Set peer trusted
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /wallets/{id}/peers:
+    get:
+      tags: [wallet-peers]
+      summary: List peers by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/trusted:
+    get:
+      tags: [wallet-peers]
+      summary: List trusted peers by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/recent:
+    get:
+      tags: [wallet-peers]
+      summary: List recent peers by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/connection/{type}:
+    get:
+      tags: [wallet-peers]
+      summary: List peers by connection type
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/top-volume:
+    get:
+      tags: [wallet-peers]
+      summary: Top peers by volume
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/top-count:
+    get:
+      tags: [wallet-peers]
+      summary: Top peers by transaction count
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/count:
+    get:
+      tags: [wallet-peers]
+      summary: Count peers by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/count/trusted:
+    get:
+      tags: [wallet-peers]
+      summary: Count trusted peers by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/stale:
+    get:
+      tags: [wallet-peers]
+      summary: List stale peers by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/{peer_id}:
+    get:
+      tags: [wallet-peers]
+      summary: Get peer by wallet and peer ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: peer_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+    patch:
+      tags: [wallet-peers]
+      summary: Update peer info
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: peer_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/peers/{peer_id}/transaction-count:
+    post:
+      tags: [wallet-peers]
+      summary: Increment peer transaction count
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: peer_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /sync-logs:
+    post:
+      tags: [sync-logs]
+      summary: Create sync log
+      responses:
+        "201":
+          description: Created
+  /sync-logs/pending:
+    get:
+      tags: [sync-logs]
+      summary: List all pending sync logs
+      responses:
+        "200":
+          description: OK
+  /sync-logs/retry:
+    get:
+      tags: [sync-logs]
+      summary: List sync logs needing retry
+      responses:
+        "200":
+          description: OK
+  /sync-logs/count/{status}:
+    get:
+      tags: [sync-logs]
+      summary: Count sync logs by status
+      parameters:
+        - in: path
+          name: status
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /sync-logs/old:
+    delete:
+      tags: [sync-logs]
+      summary: Delete old sync logs
+      responses:
+        "204":
+          description: No Content
+  /sync-logs/{id}:
+    get:
+      tags: [sync-logs]
+      summary: Get sync log by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /sync-logs/{id}/status:
+    patch:
+      tags: [sync-logs]
+      summary: Update sync log status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /sync-logs/{id}/settle-success:
+    post:
+      tags: [sync-logs]
+      summary: Mark sync log settle success
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /sync-logs/{id}/settle-failed:
+    post:
+      tags: [sync-logs]
+      summary: Mark sync log settle failed
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /sync-logs/{id}/settle-conflict:
+    post:
+      tags: [sync-logs]
+      summary: Mark sync log settle conflict
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /sync-logs/{id}/resolve:
+    post:
+      tags: [sync-logs]
+      summary: Resolve sync conflict
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /wallets/{id}/sync-logs:
+    get:
+      tags: [wallet-sync-logs]
+      summary: Get sync logs by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/sync-logs/pending:
+    get:
+      tags: [wallet-sync-logs]
+      summary: List pending syncs by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/sync-logs/failed:
+    get:
+      tags: [wallet-sync-logs]
+      summary: List failed syncs by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/sync-logs/conflicts:
+    get:
+      tags: [wallet-sync-logs]
+      summary: List conflicted syncs by wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /wallets/{id}/sync-logs/stats:
+    get:
+      tags: [wallet-sync-logs]
+      summary: Sync stats for wallet
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /transactions/{id}/sync-logs:
+    get:
+      tags: [transaction-sync-logs]
+      summary: Get sync logs by transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /audit-logs:
+    post:
+      tags: [audit-logs]
+      summary: Create audit log
+      responses:
+        "201":
+          description: Created
+    get:
+      tags: [audit-logs]
+      summary: List audit logs
+      responses:
+        "200":
+          description: OK
+  /audit-logs/recent:
+    get:
+      tags: [audit-logs]
+      summary: Recent audit logs
+      responses:
+        "200":
+          description: OK
+  /audit-logs/count:
+    get:
+      tags: [audit-logs]
+      summary: Count audit logs
+      responses:
+        "200":
+          description: OK
+  /audit-logs/count/{table}:
+    get:
+      tags: [audit-logs]
+      summary: Count audit logs by table
+      parameters:
+        - in: path
+          name: table
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /audit-logs/table/{table}:
+    get:
+      tags: [audit-logs]
+      summary: List audit logs by table
+      parameters:
+        - in: path
+          name: table
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /audit-logs/record/{table}/{record_id}:
+    get:
+      tags: [audit-logs]
+      summary: List audit logs by record
+      parameters:
+        - in: path
+          name: table
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: record_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /audit-logs/action/{action}:
+    get:
+      tags: [audit-logs]
+      summary: List audit logs by action
+      parameters:
+        - in: path
+          name: action
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /audit-logs/user/{user_id}:
+    get:
+      tags: [audit-logs]
+      summary: List audit logs by user
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /audit-logs/range:
+    get:
+      tags: [audit-logs]
+      summary: List audit logs by date range
+      responses:
+        "200":
+          description: OK
+  /audit-logs/ip/{ip}:
+    get:
+      tags: [audit-logs]
+      summary: List audit logs by IP
+      parameters:
+        - in: path
+          name: ip
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /audit-logs/history/{table}/{record_id}:
+    get:
+      tags: [audit-logs]
+      summary: Get record history
+      parameters:
+        - in: path
+          name: table
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: record_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /audit-logs/balance-history/{wallet_id}:
+    get:
+      tags: [audit-logs]
+      summary: Get balance history
+      parameters:
+        - in: path
+          name: wallet_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+  /audit-logs/old:
+    delete:
+      tags: [audit-logs]
+      summary: Delete old audit logs
+      responses:
+        "204":
+          description: No Content
+  /audit-logs/{id}:
+    get:
+      tags: [audit-logs]
+      summary: Get audit log by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+
+  /stats/system:
+    get:
+      tags: [stats]
+      summary: Get system stats
+      responses:
+        "200":
+          description: OK
+
+  /transfers:
+    post:
+      tags: [transfers]
+      summary: Transfer funds
+      responses:
+        "200":
+          description: OK
+
+components:
+  schemas:
+    CreateWalletRequest:
+      type: object
+      required: [name, phone_number, pin, public_key]
+      properties:
+        name:
+          type: string
+        phone_number:
+          type: string
+        pin:
+          type: string
+        device_id:
+          type: string
+        public_key:
+          type: string
+        private_key:
+          type: string
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        public_key:
+          type: string
+        balance:
+          type: string
+        phone_number:
+          type: string
+        name:
+          type: string
+        is_active:
+          type: boolean
+        device_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
