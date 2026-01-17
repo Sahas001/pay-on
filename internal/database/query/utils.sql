@@ -18,17 +18,36 @@ WHERE w.id = $1 AND w.deleted_at IS NULL
 GROUP BY w.id;
 
 -- name: GetSystemStats :one
-SELECT 
-    COUNT(DISTINCT w.id) as total_wallets,
-    COUNT(DISTINCT CASE WHEN w.is_active THEN w.id END) as active_wallets,
-    COUNT(DISTINCT t.id) as total_transactions,
-    COALESCE(SUM(t.amount), 0) as total_volume,
-    COUNT(DISTINCT p.id) as total_peers,
-    COUNT(DISTINCT CASE WHEN sl.status = 'pending' THEN sl.id END) as pending_syncs
-FROM wallets w
-LEFT JOIN transactions t ON (t.from_wallet_id = w.id OR t.to_wallet_id = w.id)
-LEFT JOIN peers p ON p.wallet_id = w.id
-LEFT JOIN sync_logs sl ON sl.wallet_id = w.id;
+WITH wallet_stats AS (
+    SELECT
+        COUNT(*) as total_wallets,
+        COUNT(*) FILTER (WHERE is_active) as active_wallets
+    FROM wallets
+),
+transaction_stats AS (
+    SELECT
+        COUNT(*) as total_transactions,
+        COALESCE(SUM(amount), 0) as total_volume
+    FROM transactions
+),
+peer_stats AS (
+    SELECT COUNT(*) as total_peers
+    FROM peers
+    WHERE deleted_at IS NULL
+),
+sync_stats AS (
+    SELECT COUNT(*) as pending_syncs
+    FROM sync_logs
+    WHERE status = 'pending'
+)
+SELECT
+    wallet_stats.total_wallets,
+    wallet_stats.active_wallets,
+    transaction_stats.total_transactions,
+    transaction_stats.total_volume,
+    peer_stats.total_peers,
+    sync_stats.pending_syncs
+FROM wallet_stats, transaction_stats, peer_stats, sync_stats;
 
 -- name: SearchTransactions :many
 SELECT 

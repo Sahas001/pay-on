@@ -2,6 +2,7 @@ package api
 
 import (
 	database "github.com/Sahas001/pay-on/internal/database/sqlc"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +14,21 @@ type Server struct {
 func NewServer(store *database.Store) *Server {
 	server := &Server{store: store}
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{
+		AllowOriginFunc: func(origin string) bool {
+			if origin == "" || origin == "null" {
+				return true
+			}
+			switch origin {
+			case "http://localhost:3000", "http://localhost:5173", "http://localhost:8080", "http://127.0.0.1:5500":
+				return true
+			default:
+				return false
+			}
+		},
+		AllowMethods: []string{"GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Content-Type", "Authorization"},
+	}))
 
 	wallets := router.Group("/wallets")
 	wallets.POST("", server.createWallet)
@@ -77,7 +93,6 @@ func NewServer(store *database.Store) *Server {
 	peers.POST("/auto-trust", server.autoTrustFrequentPeers)
 	peers.GET("/:id", server.getPeerByID)
 	peers.PATCH("/:id/last-seen", server.updatePeerLastSeen)
-	peers.PATCH("/:id/trusted", server.setPeerTrusted)
 	peers.DELETE("/:id", server.deletePeer)
 	peers.DELETE("/:id/hard", server.hardDeletePeer)
 
@@ -93,6 +108,7 @@ func NewServer(store *database.Store) *Server {
 	walletPeers.GET("/stale", server.getStalePeers)
 	walletPeers.GET("/:peer_id", server.getPeerByWalletAndPeerID)
 	walletPeers.PATCH("/:peer_id", server.updatePeerInfo)
+	walletPeers.PATCH("/:peer_id/trusted", server.setPeerTrustedByWallet)
 	walletPeers.POST("/:peer_id/transaction-count", server.incrementPeerTransactionCount)
 
 	syncLogs := router.Group("/sync-logs")

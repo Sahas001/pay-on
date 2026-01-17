@@ -672,7 +672,8 @@ DO UPDATE SET
     bt_address = EXCLUDED.bt_address,
     connection_type = EXCLUDED.connection_type,
     last_seen_at = NOW(),
-    updated_at = NOW()
+    updated_at = NOW(),
+    deleted_at = NULL
 RETURNING id, wallet_id, peer_wallet_id, name, public_key, ip_address, bt_address, connection_type, is_trusted, transaction_count, last_seen_at, first_seen_at, created_at, updated_at, deleted_at
 `
 

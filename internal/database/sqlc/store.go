@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/google/uuid"
@@ -106,7 +107,19 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			arg.ToWalletID,
 			arg.Amount,
 		)
-		return err
+		if err != nil {
+			return err
+		}
+
+		if err := upsertTransferPeers(ctx, q, result.FromWallet, result.ToWallet, arg.ConnectionType); err != nil {
+			return err
+		}
+
+		if err := incrementPeerCounts(ctx, q, result.FromWallet.ID, result.ToWallet.ID); err != nil {
+			return err
+		}
+
+		return nil
 	})
 
 	return result, err
@@ -148,4 +161,53 @@ func transferBalances(
 		Balance: amount,
 	})
 	return fromWallet, toWallet, err
+}
+
+func upsertTransferPeers(ctx context.Context, q *Queries, fromWallet Wallet, toWallet Wallet, connType NullConnectionType) error {
+	connection := connType
+	if !connection.Valid {
+		connection = NullConnectionType{ConnectionType: ConnectionTypeOnline, Valid: true}
+	}
+
+	trusted := false
+	var btAddr net.HardwareAddr
+
+	if _, err := q.UpsertPeer(ctx, UpsertPeerParams{
+		WalletID:       fromWallet.ID,
+		PeerWalletID:   toWallet.ID,
+		Name:           &toWallet.Name,
+		PublicKey:      toWallet.PublicKey,
+		IpAddress:      nil,
+		BtAddress:      btAddr,
+		ConnectionType: connection.ConnectionType,
+		IsTrusted:      &trusted,
+	}); err != nil {
+		return err
+	}
+
+	_, err := q.UpsertPeer(ctx, UpsertPeerParams{
+		WalletID:       toWallet.ID,
+		PeerWalletID:   fromWallet.ID,
+		Name:           &fromWallet.Name,
+		PublicKey:      fromWallet.PublicKey,
+		IpAddress:      nil,
+		BtAddress:      btAddr,
+		ConnectionType: connection.ConnectionType,
+		IsTrusted:      &trusted,
+	})
+	return err
+}
+
+func incrementPeerCounts(ctx context.Context, q *Queries, fromWalletID, toWalletID uuid.UUID) error {
+	if err := q.IncrementPeerTransactionCount(ctx, IncrementPeerTransactionCountParams{
+		WalletID:     fromWalletID,
+		PeerWalletID: toWalletID,
+	}); err != nil {
+		return err
+	}
+
+	return q.IncrementPeerTransactionCount(ctx, IncrementPeerTransactionCountParams{
+		WalletID:     toWalletID,
+		PeerWalletID: fromWalletID,
+	})
 }

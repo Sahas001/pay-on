@@ -19,6 +19,12 @@ func TestTransferTx(t *testing.T) {
 		if transactionID != uuid.Nil {
 			_, _ = testPool.Exec(ctx, "DELETE FROM transactions WHERE id = $1", transactionID)
 		}
+		_, _ = testPool.Exec(
+			ctx,
+			"DELETE FROM peers WHERE wallet_id = $1 OR wallet_id = $2 OR peer_wallet_id = $1 OR peer_wallet_id = $2",
+			fromWallet.ID,
+			toWallet.ID,
+		)
 		_, _ = testPool.Exec(ctx, "DELETE FROM wallets WHERE id = $1 OR id = $2", fromWallet.ID, toWallet.ID)
 	}()
 

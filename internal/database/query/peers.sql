@@ -35,7 +35,8 @@ DO UPDATE SET
     bt_address = EXCLUDED.bt_address,
     connection_type = EXCLUDED.connection_type,
     last_seen_at = NOW(),
-    updated_at = NOW()
+    updated_at = NOW(),
+    deleted_at = NULL
 RETURNING *;
 
 -- name: GetPeerByID :one
