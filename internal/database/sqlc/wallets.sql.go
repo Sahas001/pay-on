@@ -41,6 +41,7 @@ func (q *Queries) CountWallets(ctx context.Context) (int64, error) {
 const createWallet = `-- name: CreateWallet :one
 
 INSERT INTO wallets (
+user_id,
 public_key,
 private_key,
 balance,
@@ -49,11 +50,12 @@ name,
 pin_hash,
 device_id
 ) VALUES (
-	$1, $2, $3, $4, $5, $6, $7
-	) RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at
+	$1, $2, $3, $4, $5, $6, $7, $8
+	) RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id
 `
 
 type CreateWalletParams struct {
+	UserID      pgtype.UUID    `json:"user_id"`
 	PublicKey   string         `json:"public_key"`
 	PrivateKey  string         `json:"private_key"`
 	Balance     pgtype.Numeric `json:"balance"`
@@ -66,6 +68,7 @@ type CreateWalletParams struct {
 // internal/database/query/wallets.sql
 func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallet, error) {
 	row := q.db.QueryRow(ctx, createWallet,
+		arg.UserID,
 		arg.PublicKey,
 		arg.PrivateKey,
 		arg.Balance,
@@ -89,6 +92,7 @@ func (q *Queries) CreateWallet(ctx context.Context, arg CreateWalletParams) (Wal
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -112,7 +116,7 @@ SET
 balance = balance - $2,
 updated_at = NOW()
 WHERE id = $1 AND deleted_at IS NULL AND balance >= $2
-RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at
+RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id
 `
 
 type DecrementWalletBalanceParams struct {
@@ -137,6 +141,7 @@ func (q *Queries) DecrementWalletBalance(ctx context.Context, arg DecrementWalle
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -154,7 +159,7 @@ func (q *Queries) GetWalletBalance(ctx context.Context, id uuid.UUID) (pgtype.Nu
 }
 
 const getWalletByDeviceID = `-- name: GetWalletByDeviceID :one
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets WHERE device_id = $1 AND deleted_at IS NULL
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets WHERE device_id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetWalletByDeviceID(ctx context.Context, deviceID *string) (Wallet, error) {
@@ -174,12 +179,13 @@ func (q *Queries) GetWalletByDeviceID(ctx context.Context, deviceID *string) (Wa
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getWalletByID = `-- name: GetWalletByID :one
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets WHERE id = $1 AND deleted_at IS NULL
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetWalletByID(ctx context.Context, id uuid.UUID) (Wallet, error) {
@@ -199,12 +205,13 @@ func (q *Queries) GetWalletByID(ctx context.Context, id uuid.UUID) (Wallet, erro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getWalletByPhoneNumber = `-- name: GetWalletByPhoneNumber :one
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets WHERE phone_number = $1 AND deleted_at IS NULL
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets WHERE phone_number = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetWalletByPhoneNumber(ctx context.Context, phoneNumber string) (Wallet, error) {
@@ -224,12 +231,13 @@ func (q *Queries) GetWalletByPhoneNumber(ctx context.Context, phoneNumber string
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const getWalletByPublicKey = `-- name: GetWalletByPublicKey :one
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets WHERE public_key = $1 AND deleted_at IS NULL
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets WHERE public_key = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetWalletByPublicKey(ctx context.Context, publicKey string) (Wallet, error) {
@@ -249,6 +257,7 @@ func (q *Queries) GetWalletByPublicKey(ctx context.Context, publicKey string) (W
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -283,7 +292,7 @@ func (q *Queries) GetWalletWithBalance(ctx context.Context, id uuid.UUID) (GetWa
 }
 
 const getWalletsNeedingSync = `-- name: GetWalletsNeedingSync :many
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets
 WHERE (last_synced_at IS NULL OR last_synced_at < NOW() - INTERVAL '1 day')
 	AND deleted_at IS NULL
 ORDER BY last_synced_at ASC NULLS FIRST
@@ -313,6 +322,7 @@ func (q *Queries) GetWalletsNeedingSync(ctx context.Context, limit int32) ([]Wal
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -340,7 +350,7 @@ SET
 balance = balance + $2,
 updated_at = NOW()
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at
+RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id
 `
 
 type IncrementWalletBalanceParams struct {
@@ -365,12 +375,13 @@ func (q *Queries) IncrementWalletBalance(ctx context.Context, arg IncrementWalle
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
 
 const listActiveWallets = `-- name: ListActiveWallets :many
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets WHERE is_active = TRUE AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets WHERE is_active = TRUE AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
 
 type ListActiveWalletsParams struct {
@@ -401,6 +412,7 @@ func (q *Queries) ListActiveWallets(ctx context.Context, arg ListActiveWalletsPa
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -413,7 +425,7 @@ func (q *Queries) ListActiveWallets(ctx context.Context, arg ListActiveWalletsPa
 }
 
 const listWallets = `-- name: ListWallets :many
-SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at FROM wallets WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2
+SELECT id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id FROM wallets WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT $1 OFFSET $2
 `
 
 type ListWalletsParams struct {
@@ -444,6 +456,7 @@ func (q *Queries) ListWallets(ctx context.Context, arg ListWalletsParams) ([]Wal
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -581,7 +594,7 @@ phone_number = COALESCE($3, phone_number),
 device_id = COALESCE($4, device_id),
 updated_at = NOW()
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at
+RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id
 `
 
 type UpdateWalletParams struct {
@@ -613,6 +626,7 @@ func (q *Queries) UpdateWallet(ctx context.Context, arg UpdateWalletParams) (Wal
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }
@@ -623,7 +637,7 @@ SET
 balance = $2,
 updated_at = NOW()
 WHERE id = $1 AND deleted_at IS NULL
-RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at
+RETURNING id, public_key, private_key, balance, phone_number, name, pin_hash, is_active, device_id, last_synced_at, created_at, updated_at, deleted_at, user_id
 `
 
 type UpdateWalletBalanceParams struct {
@@ -648,6 +662,7 @@ func (q *Queries) UpdateWalletBalance(ctx context.Context, arg UpdateWalletBalan
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.UserID,
 	)
 	return i, err
 }

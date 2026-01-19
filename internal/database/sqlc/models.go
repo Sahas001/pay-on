@@ -347,6 +347,15 @@ type Transaction struct {
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
+type User struct {
+	ID           uuid.UUID          `json:"id"`
+	PhoneNumber  string             `json:"phone_number"`
+	Email        *string            `json:"email"`
+	PasswordHash string             `json:"password_hash"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
 // User wallet information with cryptographic keys and balance
 type Wallet struct {
 	ID         uuid.UUID `json:"id"`
@@ -364,4 +373,5 @@ type Wallet struct {
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 	DeletedAt    pgtype.Timestamptz `json:"deleted_at"`
+	UserID       pgtype.UUID        `json:"user_id"`
 }

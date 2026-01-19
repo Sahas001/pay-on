@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/Sahas001/pay-on/config"
 	database "github.com/Sahas001/pay-on/internal/database/sqlc"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -9,10 +10,11 @@ import (
 type Server struct {
 	store  *database.Store
 	router *gin.Engine
+	config config.Config
 }
 
-func NewServer(store *database.Store) *Server {
-	server := &Server{store: store}
+func NewServer(cfg config.Config, store *database.Store) *Server {
+	server := &Server{store: store, config: cfg}
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOriginFunc: func(origin string) bool {
@@ -30,7 +32,13 @@ func NewServer(store *database.Store) *Server {
 		AllowHeaders: []string{"Content-Type", "Authorization"},
 	}))
 
-	wallets := router.Group("/wallets")
+	router.POST("/auth/register", server.register)
+	router.POST("/auth/login", server.login)
+
+	api := router.Group("/")
+	api.Use(server.authMiddleware())
+
+	wallets := api.Group("/wallets")
 	wallets.POST("", server.createWallet)
 	wallets.GET("", server.listWallets)
 	wallets.GET("/active", server.listActiveWallets)
@@ -57,7 +65,7 @@ func NewServer(store *database.Store) *Server {
 	wallets.DELETE("/:id", server.softDeleteWallet)
 	wallets.DELETE("/:id/hard", server.hardDeleteWallet)
 
-	transactions := router.Group("/transactions")
+	transactions := api.Group("/transactions")
 	transactions.POST("", server.createTransaction)
 	transactions.GET("/search", server.searchTransactions)
 	transactions.GET("/recent", server.getRecentTransactions)
@@ -76,7 +84,7 @@ func NewServer(store *database.Store) *Server {
 	transactions.POST("/:id/mark-settled", server.markTransactionSettled)
 	transactions.POST("/:id/fail", server.failTransaction)
 
-	walletTransactions := router.Group("/wallets/:id/transactions")
+	walletTransactions := api.Group("/wallets/:id/transactions")
 	walletTransactions.GET("", server.listTransactionsByWallet)
 	walletTransactions.GET("/sent", server.listSentTransactions)
 	walletTransactions.GET("/received", server.listReceivedTransactions)
@@ -87,7 +95,7 @@ func NewServer(store *database.Store) *Server {
 	walletTransactions.GET("/count", server.countTransactionsByWallet)
 	walletTransactions.GET("/nonce/:nonce", server.checkNonceExists)
 
-	peers := router.Group("/peers")
+	peers := api.Group("/peers")
 	peers.POST("", server.createPeer)
 	peers.POST("/upsert", server.upsertPeer)
 	peers.POST("/auto-trust", server.autoTrustFrequentPeers)
@@ -96,7 +104,7 @@ func NewServer(store *database.Store) *Server {
 	peers.DELETE("/:id", server.deletePeer)
 	peers.DELETE("/:id/hard", server.hardDeletePeer)
 
-	walletPeers := router.Group("/wallets/:id/peers")
+	walletPeers := api.Group("/wallets/:id/peers")
 	walletPeers.GET("", server.listPeersByWallet)
 	walletPeers.GET("/trusted", server.listTrustedPeers)
 	walletPeers.GET("/recent", server.listRecentPeers)
@@ -111,7 +119,7 @@ func NewServer(store *database.Store) *Server {
 	walletPeers.PATCH("/:peer_id/trusted", server.setPeerTrustedByWallet)
 	walletPeers.POST("/:peer_id/transaction-count", server.incrementPeerTransactionCount)
 
-	syncLogs := router.Group("/sync-logs")
+	syncLogs := api.Group("/sync-logs")
 	syncLogs.POST("", server.createSyncLog)
 	syncLogs.GET("/pending", server.listAllPendingSyncs)
 	syncLogs.GET("/retry", server.getSyncsNeedingRetry)
@@ -124,17 +132,17 @@ func NewServer(store *database.Store) *Server {
 	syncLogs.POST("/:id/settle-conflict", server.markSettleConflict)
 	syncLogs.POST("/:id/resolve", server.resolveSyncConflict)
 
-	walletSyncLogs := router.Group("/wallets/:id/sync-logs")
+	walletSyncLogs := api.Group("/wallets/:id/sync-logs")
 	walletSyncLogs.GET("", server.getSyncLogsByWallet)
 	walletSyncLogs.GET("/pending", server.listPendingSyncs)
 	walletSyncLogs.GET("/failed", server.listFailedSyncs)
 	walletSyncLogs.GET("/conflicts", server.listConflictedSyncs)
 	walletSyncLogs.GET("/stats", server.getSyncStats)
 
-	transactionSyncLogs := router.Group("/transactions/:id/sync-logs")
+	transactionSyncLogs := api.Group("/transactions/:id/sync-logs")
 	transactionSyncLogs.GET("", server.getSyncLogsByTransaction)
 
-	auditLogs := router.Group("/audit-logs")
+	auditLogs := api.Group("/audit-logs")
 	auditLogs.POST("", server.createAuditLog)
 	auditLogs.GET("", server.listAuditLogs)
 	auditLogs.GET("/recent", server.getRecentAuditLogs)
@@ -151,10 +159,10 @@ func NewServer(store *database.Store) *Server {
 	auditLogs.DELETE("/old", server.deleteOldAuditLogs)
 	auditLogs.GET("/:id", server.getAuditLogByID)
 
-	stats := router.Group("/stats")
+	stats := api.Group("/stats")
 	stats.GET("/system", server.getSystemStats)
 
-	router.POST("/transfers", server.transferTx)
+	api.POST("/transfers", server.transferTx)
 
 	server.router = router
 	return server

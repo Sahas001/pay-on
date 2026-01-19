@@ -37,6 +37,12 @@ func (server *Server) createWallet(c *gin.Context) {
 		return
 	}
 
+	userID, ok := authUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse(errInvalidCredentials))
+		return
+	}
+
 	pinHash, err := bcrypt.GenerateFromPassword([]byte(req.Pin), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -60,6 +66,7 @@ func (server *Server) createWallet(c *gin.Context) {
 	}
 
 	wallet, err := server.store.CreateWallet(c.Request.Context(), database.CreateWalletParams{
+		UserID:      toPgUUID(userID),
 		PublicKey:   req.PublicKey,
 		PrivateKey:  privateKey,
 		Balance:     balance,

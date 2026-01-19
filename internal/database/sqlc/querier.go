@@ -32,6 +32,8 @@ type Querier interface {
 	CreateSyncLog(ctx context.Context, arg CreateSyncLogParams) (SyncLog, error)
 	// internal/database/query/transactions.sql
 	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
+	// internal/database/query/users.sql
+	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	// internal/database/query/wallets.sql
 	CreateWallet(ctx context.Context, arg CreateWalletParams) (Wallet, error)
 	DeactivateWallet(ctx context.Context, id uuid.UUID) error
@@ -64,6 +66,9 @@ type Querier interface {
 	GetTransactionsByConnectionType(ctx context.Context, arg GetTransactionsByConnectionTypeParams) ([]Transaction, error)
 	GetTransactionsByDateRange(ctx context.Context, arg GetTransactionsByDateRangeParams) ([]Transaction, error)
 	GetTransactionsByMetadata(ctx context.Context, arg GetTransactionsByMetadataParams) ([]Transaction, error)
+	GetUserByEmail(ctx context.Context, email *string) (User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByPhone(ctx context.Context, phoneNumber string) (User, error)
 	GetWalletBalance(ctx context.Context, id uuid.UUID) (pgtype.Numeric, error)
 	GetWalletBalanceHistory(ctx context.Context, arg GetWalletBalanceHistoryParams) ([]GetWalletBalanceHistoryRow, error)
 	GetWalletByDeviceID(ctx context.Context, deviceID *string) (Wallet, error)

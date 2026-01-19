@@ -2,9 +2,58 @@ openapi: 3.0.3
 info:
   title: Pay-On API
   version: 0.1.0
+  description: |
+    HTTP API for wallets, transfers, peers, sync logs, and audit logs.
 servers:
   - url: http://localhost:8080
+security:
+  - bearerAuth: []
+tags:
+  - name: wallets
+  - name: transactions
+  - name: transfers
+  - name: peers
+  - name: sync-logs
+  - name: audit-logs
+  - name: stats
+  - name: auth
 paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
   /wallets:
     post:
       tags: [wallets]
@@ -1326,12 +1375,27 @@ paths:
     post:
       tags: [transfers]
       summary: Transfer funds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransferRequest"
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferResult"
 
 components:
   schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
     CreateWalletRequest:
       type: object
       required: [name, phone_number, pin, public_key]
@@ -1369,3 +1433,127 @@ components:
         created_at:
           type: string
           format: date-time
+    TransferRequest:
+      type: object
+      required: [from_wallet_id, to_wallet_id, amount, signature, pin]
+      properties:
+        from_wallet_id:
+          type: string
+          format: uuid
+        to_wallet_id:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          description: Decimal string, e.g. "10.50"
+        pin:
+          type: string
+        currency:
+          type: string
+        type:
+          type: string
+          description: p2p, deposit, withdraw
+        status:
+          type: string
+          description: pending, confirmed, settling, settled, failed, rolled_back
+        signature:
+          type: string
+        nonce:
+          type: integer
+          format: int64
+        connection_type:
+          type: string
+          description: lan, bluetooth, online
+        description:
+          type: string
+        metadata:
+          type: object
+        transaction_at:
+          type: string
+          format: date-time
+    TransferResult:
+      type: object
+      properties:
+        transaction:
+          $ref: "#/components/schemas/Transaction"
+        from_wallet:
+          $ref: "#/components/schemas/Wallet"
+        to_wallet:
+          $ref: "#/components/schemas/Wallet"
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        from_wallet_id:
+          type: string
+          format: uuid
+        to_wallet_id:
+          type: string
+          format: uuid
+        amount:
+          type: string
+        currency:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        signature:
+          type: string
+        nonce:
+          type: integer
+          format: int64
+        connection_type:
+          type: string
+        description:
+          type: string
+        metadata:
+          type: object
+        transaction_at:
+          type: string
+          format: date-time
+        confirmed_at:
+          type: string
+          format: date-time
+        synced_at:
+          type: string
+          format: date-time
+    RegisterRequest:
+      type: object
+      required: [phone_number, password]
+      properties:
+        phone_number:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    LoginRequest:
+      type: object
+      required: [password]
+      properties:
+        phone_number:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        user_id:
+          type: string
+          format: uuid
+        phone_number:
+          type: string
+        email:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

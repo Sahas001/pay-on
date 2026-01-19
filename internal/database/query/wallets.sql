@@ -2,6 +2,7 @@
 
 -- name: CreateWallet :one
 INSERT INTO wallets (
+user_id,
 public_key,
 private_key,
 balance,
@@ -10,7 +11,7 @@ name,
 pin_hash,
 device_id
 ) VALUES (
-	$1, $2, $3, $4, $5, $6, $7
+	$1, $2, $3, $4, $5, $6, $7, $8
 	) RETURNING *;
 
 

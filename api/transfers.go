@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -21,6 +22,7 @@ type transferRequest struct {
 	FromWalletID   string          `json:"from_wallet_id" binding:"required"`
 	ToWalletID     string          `json:"to_wallet_id" binding:"required"`
 	Amount         string          `json:"amount" binding:"required"`
+	Pin            string          `json:"pin" binding:"required"`
 	Currency       string          `json:"currency"`
 	Type           string          `json:"type"`
 	Status         string          `json:"status"`
@@ -39,6 +41,12 @@ func (server *Server) transferTx(c *gin.Context) {
 		return
 	}
 
+	userID, ok := authUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, errorResponse(errInvalidCredentials))
+		return
+	}
+
 	fromWalletID, err := uuid.Parse(req.FromWalletID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(errInvalidWalletID))
@@ -53,6 +61,20 @@ func (server *Server) transferTx(c *gin.Context) {
 	var amount pgtype.Numeric
 	if err := amount.Scan(req.Amount); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(errInvalidAmount))
+		return
+	}
+
+	fromWallet, err := server.store.GetWalletByID(c.Request.Context(), fromWalletID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if !fromWallet.UserID.Valid || fromWallet.UserID.Bytes != toPgUUID(userID).Bytes {
+		c.JSON(http.StatusUnauthorized, errorResponse(errInvalidCredentials))
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(fromWallet.PinHash), []byte(req.Pin)); err != nil {
+		c.JSON(http.StatusUnauthorized, errorResponse(errInvalidCredentials))
 		return
 	}
 
